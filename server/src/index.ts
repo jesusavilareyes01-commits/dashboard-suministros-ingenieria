@@ -1,6 +1,7 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { Pool } from 'pg';
 
@@ -18,11 +19,30 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD || 'password123',
 });
 
+// Rate limiting configuration (Módulo 8: Seguridad)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Demasiadas solicitudes desde esta IP, por favor intente de nuevo más tarde.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Strict rate limiting for write operations
+const strictLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 50, // Limit each IP to 50 write requests per windowMs
+  message: 'Demasiadas operaciones de escritura, por favor intente de nuevo más tarde.',
+});
+
 // Middleware
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Apply rate limiting to all API routes
+app.use('/api/', limiter);
 
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
@@ -34,7 +54,7 @@ app.get('/api/health', (req: Request, res: Response) => {
 });
 
 // Módulo 1: Registro de Solicitudes
-app.post('/api/solicitudes', async (req: Request, res: Response) => {
+app.post('/api/solicitudes', strictLimiter, async (req: Request, res: Response) => {
   const {
     nombreProceso,
     areaSolicitante,
@@ -164,7 +184,7 @@ app.get('/api/solicitudes/:id', async (req: Request, res: Response) => {
 });
 
 // Módulo 2: Validación y Revisión Administrativa
-app.put('/api/solicitudes/:id/validar', async (req: Request, res: Response) => {
+app.put('/api/solicitudes/:id/validar', strictLimiter, async (req: Request, res: Response) => {
   const { id } = req.params;
   const { numeroSap, clasificacionCompra, observaciones, validadoPor } = req.body;
 
@@ -218,7 +238,7 @@ app.put('/api/solicitudes/:id/validar', async (req: Request, res: Response) => {
 });
 
 // Módulo 3: Seguimiento a Compras y Contratación
-app.put('/api/solicitudes/:id/compras', async (req: Request, res: Response) => {
+app.put('/api/solicitudes/:id/compras', strictLimiter, async (req: Request, res: Response) => {
   const { id } = req.params;
   const {
     fechaLiberacionSap,
@@ -349,7 +369,7 @@ app.get('/api/kpis', async (req: Request, res: Response) => {
 });
 
 // Módulo 5: Actualización y Control de Información
-app.put('/api/solicitudes/:id', async (req: Request, res: Response) => {
+app.put('/api/solicitudes/:id', strictLimiter, async (req: Request, res: Response) => {
   const { id } = req.params;
   const { estadoActual, observaciones, usuario } = req.body;
 
@@ -432,7 +452,7 @@ app.get('/api/alertas', async (req: Request, res: Response) => {
 });
 
 // Módulo 7: Cierre y Evaluación del Proceso
-app.put('/api/solicitudes/:id/cerrar', async (req: Request, res: Response) => {
+app.put('/api/solicitudes/:id/cerrar', strictLimiter, async (req: Request, res: Response) => {
   const { id } = req.params;
   const {
     fechaAdjudicacion,
