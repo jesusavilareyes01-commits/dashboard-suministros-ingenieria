@@ -1,1 +1,24 @@
-{"name":"dashboard-suministros-ingenieria","version":"1.0.0","description":"Dashboard for Suministros de Ingeniería","main":"src/index.js","scripts":{"start":"node src/index.js","dev":"nodemon src/index.js","install":"npm install","docker:build":"docker build -t dashboard-suministros-ingenieria .","docker:run":"docker run -p 3000:3000 dashboard-suministros-ingenieria"},"dependencies":{},"devDependencies":{"nodemon":"^2.0.0"}}
+{
+  "name": "dashboard-suministros-ingenieria",
+  "version": "1.0.0",
+  "description": "Dashboard de Seguimiento y Control de Procesos de Suministro - Área de Ingeniería",
+  "scripts": {
+    "install-all": "npm install && cd client && npm install && cd ../server && npm install",
+    "dev:client": "cd client && npm start",
+    "dev:server": "cd server && npm run dev",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "keywords": [
+    "dashboard",
+    "suministros",
+    "ingenieria",
+    "procurement",
+    "supply-chain"
+  ],
+  "author": "Área de Ingeniería",
+  "license": "MIT"
+}
