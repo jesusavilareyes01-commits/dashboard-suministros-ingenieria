@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: suministros_db
+    environment:
+      POSTGRES_DB: dashboard_suministros
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./server/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  server:
+    build: ./server
+    container_name: suministros_server
+    environment:
+      NODE_ENV: development
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: dashboard_suministros
+      DB_USER: admin
+      DB_PASSWORD: password123
+      JWT_SECRET: mi_clave_secreta_dashboard_2025
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+
+  client:
+    build: ./client
+    container_name: suministros_client
+    ports:
+      - "3000:80"
+    depends_on:
+      - server
+
+volumes:
+  postgres_data:
